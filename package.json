@@ -1,0 +1,19 @@
+{
+  "name": "front-end-boilerplate",
+  "version": "1.0.0",
+  "description": "Ce dépot me permet de commencer rapidement mes projets",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sopraos/Front-end-boilerplate.git"
+  },
+  "author": "Sopraos <contact@ali-t.fr>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sopraos/Front-end-boilerplate/issues"
+  },
+  "homepage": "https://github.com/sopraos/Front-end-boilerplate#readme"
+}
