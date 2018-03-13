@@ -1,7 +1,3 @@
+import hello from './hello';
 
-let moukate = {
-	pess: 'pess'
-}
-
-console.log(moukate.pess)
-console.log('Je suis chargé !')
+document.getElementById('hello').innerHTML = hello;
