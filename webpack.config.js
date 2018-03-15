@@ -17,6 +17,11 @@ module.exports = env => {
 		entry: {
 			app: ['./src/assets/javascripts/app.js', './src/assets/stylesheets/app.scss']
 		},
+		output: {
+			path: path.resolve('./dist'),
+			filename: '[name].js',
+			publicPath: isDevelopment ? `http://localhost:8080/` : '/'
+		},
 		devServer: {
 			headers: {
 				'Access-Control-Allow-Origin': '*',
