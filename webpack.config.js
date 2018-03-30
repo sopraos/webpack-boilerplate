@@ -8,6 +8,7 @@ const ImageminPlugin = require('imagemin-webpack-plugin').default;
 const imageminMozjpeg = require('imagemin-mozjpeg');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
+const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
 
 module.exports = env => {
 	const isDevelopment = env.development === true;
@@ -101,7 +102,8 @@ module.exports = env => {
 						progressive: true
 					})
 				]
-			})
+			}),
+			new FriendlyErrorsPlugin()
 		]
 	};
 
