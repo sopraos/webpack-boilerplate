@@ -16,7 +16,7 @@ module.exports = env => {
 	let config = {
 		mode: isDevelopment ? 'development' : 'production',
 		entry: {
-			app: ['./src/javascripts/app.js', './src/stylesheets/app.scss']
+			app: ['./src/assets/javascripts/app.js', './src/assets/stylesheets/app.scss']
 		},
 		output: {
 			path: path.resolve(__dirname, 'dist'),
@@ -32,7 +32,7 @@ module.exports = env => {
 			overlay: true,
 			clientLogLevel: 'warning',
 			watchContentBase: true,
-			contentBase: path.join(__dirname, '/'),
+			contentBase: path.join(__dirname, '/')
 		},
 		module: {
 			rules: [
@@ -86,7 +86,7 @@ module.exports = env => {
 		},
 		plugins: [
 			new HtmlWebpackPlugin({
-				template: 'index.html',
+				template: './src/index.html',
 				inject: true
 			}),
 			new ExtractTextPlugin({
