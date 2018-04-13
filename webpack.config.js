@@ -16,10 +16,10 @@ module.exports = env => {
 	let config = {
 		mode: isDevelopment ? 'development' : 'production',
 		entry: {
-			app: ['./src/assets/javascripts/app.js', './src/assets/stylesheets/app.scss']
+			app: ['./src/javascripts/app.js', './src/stylesheets/app.scss']
 		},
 		output: {
-			path: path.resolve('./dist'),
+			path: path.resolve(__dirname, 'dist'),
 			filename: '[name].js',
 			publicPath: isDevelopment ? `http://localhost:8080/` : '/'
 		},
@@ -32,7 +32,7 @@ module.exports = env => {
 			overlay: true,
 			clientLogLevel: 'warning',
 			watchContentBase: true,
-			contentBase: path.join('./src/html')
+			contentBase: path.join(__dirname, '/'),
 		},
 		module: {
 			rules: [
@@ -86,7 +86,7 @@ module.exports = env => {
 		},
 		plugins: [
 			new HtmlWebpackPlugin({
-				template: './src/html/index.html',
+				template: 'index.html',
 				inject: true
 			}),
 			new ExtractTextPlugin({
@@ -110,7 +110,7 @@ module.exports = env => {
 	// Plugins spécifiques Env
 	if (!isDevelopment) {
 		config.plugins.push(new CleanWebpackPlugin(['dist'], {
-			root: path.resolve('./'),
+			root: path.resolve(__dirname, '/'),
 			verbose: true,
 			dry: false
 		}));
