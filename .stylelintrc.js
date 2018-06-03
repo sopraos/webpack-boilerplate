@@ -1,6 +1,6 @@
-{
+module.exports = {
 	"rules": {
-		"at-rule-empty-line-before": [ "always", {
+		"at-rule-empty-line-before": ["always", {
 			"except": [
 				"blockless-after-same-name-blockless",
 				"first-nested"
@@ -27,7 +27,7 @@
 		}],
 		"comment-no-empty": true,
 		"comment-whitespace-inside": "always",
-		"custom-property-empty-line-before": [ "always", {
+		"custom-property-empty-line-before": ["always", {
 			"except": [
 				"after-custom-property",
 				"first-nested"
@@ -39,7 +39,7 @@
 		}],
 		"declaration-bang-space-after": "never",
 		"declaration-bang-space-before": "always",
-		"declaration-block-no-duplicate-properties": [ true, {
+		"declaration-block-no-duplicate-properties": [true, {
 			"ignore": ["consecutive-duplicates-with-different-values"]
 		}],
 		"declaration-block-no-redundant-longhand-properties": true,
@@ -52,7 +52,7 @@
 		"declaration-colon-newline-after": "always-multi-line",
 		"declaration-colon-space-after": "always-single-line",
 		"declaration-colon-space-before": "never",
-		"declaration-empty-line-before": [ "always", {
+		"declaration-empty-line-before": ["always", {
 			"except": [
 				"after-declaration",
 				"first-nested"
@@ -127,4 +127,4 @@
 		"value-list-comma-space-before": "never",
 		"value-list-max-empty-lines": 0
 	}
-}
+};

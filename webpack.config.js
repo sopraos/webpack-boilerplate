@@ -1,120 +1,220 @@
 // Webpack configuration
 // ===\===================
 
+/**
+ * DÉPENDANCES
+ */
 const path = require('path');
-const ExtractTextPlugin = require('extract-text-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
-const ImageminPlugin = require('imagemin-webpack-plugin').default;
-const imageminMozjpeg = require('imagemin-mozjpeg');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const FriendlyErrorsPlugin = require('friendly-errors-webpack-plugin');
+const chalk = require('chalk');
+const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
+
+/**
+ * PLUGINS
+ */
+// Plugin Supprimer inutilisé | Supprimer les entrées inutilisées
+class DeleteUnused {
+	constructor(entriesToDelete = []) {
+		this.entriesToDelete = entriesToDelete;
+	}
+	apply(compiler) {
+		compiler.hooks.emit.tapAsync('DeleteUnused', (compilation, callback) => {
+			compilation.chunks.forEach((chunk) => {
+				if (this.entriesToDelete.includes(chunk.name)) {
+					let fileDeleteCount = 0; // eslint-disable-line
+					chunk.files.forEach((filename) => {
+						if (/\.js(\.map)?(\?[^.]*)?$/.test(filename)) {
+							fileDeleteCount++;
+							delete compilation.assets[filename];
+							chunk.files.splice(chunk.files.indexOf(filename), 1);
+						}
+					});
+				}
+			});
+			callback();
+		});
+	}
+}
+// Plugin Friendly Errors Webpack Plugin
+class FriendlyErrors {
+	constructor(outputPath, friendlyErrorsPlugin) {
+		this.outputPath = outputPath;
+		this.friendlyErrorsPlugin = friendlyErrorsPlugin;
+	}
+	apply(compiler) {
+		compiler.hooks.emit.tapAsync('FriendlyErrors', (compilation, callback) => {
+			this.friendlyErrorsPlugin.compilationSuccessInfo.messages = [
+				`${chalk.yellow(Object.keys(compilation.assets).length)} fichiers écrits dans ${chalk.yellow(this.outputPath)}`
+			];
+			callback();
+		});
+	}
+
+}
+
+/**
+ * VARIABLES
+ */
+// Le répertoire du projet où les ressources compilées seront stockées
+const setOutputPath = path.resolve(__dirname, 'public/build/');
+// Le chemin public utilisé par le serveur web pour accéder au répertoire précédent
+const setPublicPath = '/build'.replace(/\/$/,'') + '/';
+// Serveur d'URL
+const devServerUrl = 'http://localhost:8080/'.replace(/\/$/,'') + setPublicPath;
 
 module.exports = env => {
-	const isDevelopment = env.development === true;
-
-	let config = {
-		mode: isDevelopment ? 'development' : 'production',
+	const isDevMode = env.development === true;
+	// Base de configuration
+	const config = {
+		mode: isDevMode ? 'development' : 'production',
+		context: __dirname,
 		entry: {
-			app: ['./src/assets/javascripts/app.js', './src/assets/stylesheets/app.scss']
+			'js/app': './src/javascripts/app.js',
+			'css/app': './src/stylesheets/app.scss',
 		},
 		output: {
-			path: path.resolve(__dirname, 'dist'),
-			filename: '[name].js',
-			publicPath: isDevelopment ? `http://localhost:8080/` : '/'
-		},
-		devServer: {
-			headers: {
-				'Access-Control-Allow-Origin': '*',
-				'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
-				'Access-Control-Allow-Headers': 'X-Requested-With, content-type, Authorization'
-			},
-			overlay: true,
-			clientLogLevel: 'warning',
-			watchContentBase: true,
-			contentBase: path.join(__dirname, '/')
+			filename: isDevMode ? '[name].js' : '[name].[chunkhash:8].js',
+			path: setOutputPath,
+			pathinfo: isDevMode,
+			publicPath: isDevMode ? devServerUrl : setPublicPath
 		},
 		module: {
 			rules: [
+				// Javascripts
 				{
 					enforce: 'pre',
-					test: /\.js$/,
+					test: /\.jsx?$/,
 					exclude: /node_modules/,
-					loader: 'eslint-loader'
+					loader: 'eslint-loader',
+					options: {  cache: true, emitWarning: true, }
 				},
 				{
-					test: /\.js$/,
+					test: /\.jsx?$/,
 					exclude: /node_modules/,
-					use: 'babel-loader'
-				},
-				{
-					test: /\.(scss|css)$/,
-					use: ExtractTextPlugin.extract({
-						fallback: 'style-loader',
-						use: [
-							{
-								loader: 'css-loader',
-								options: {
-									minimize: !isDevelopment,
-									sourceMap: isDevelopment
-								}
-							},
-							{
-								loader: 'postcss-loader',
-								options: {
-									sourceMap: isDevelopment
-								}
-							},
-							{
-								loader: 'sass-loader',
-								options: {
-									sourceMap: isDevelopment
-								}
-							}
-						]
-					})
-				},
-				{
-					test: /\.(png|jpe?g|gif|svg|woff2?|eot|ttf|otf|wav)(\?.*)?$/,
-					loader: 'file-loader',
-					options: {
-						name: `[name]${isDevelopment ? '' : '.[hash]'}.[ext]`,
-						useRelativePath: !isDevelopment
+					use: {
+						loader: 'babel-loader',
+						options: {
+							presets: [
+								['@babel/preset-env', {
+									targets: {
+										browsers: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'safari >= 7','not dead'],
+										forceAllTransforms: true
+									},
+									modules: false,
+									useBuiltIns: 'usage'
+								}]
+							],
+							cacheDirectory: true
+						}
 					}
+				},
+				// Stylesheets
+				{
+					test: /\.s[ac]ss$/,
+					exclude: /node_modules/,
+					use: [
+						isDevMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+						{
+							loader: 'css-loader', options: {
+								minimize: !isDevMode,
+								sourceMap: isDevMode,
+								importLoaders: 1
+							}
+						}, {
+							loader: 'postcss-loader', options: {
+								sourceMap: isDevMode
+							}
+						}, {
+							loader: 'sass-loader', options: {
+								sourceMap: isDevMode,
+							}
+						}
+					]
+				},
+				// Images
+				{
+					test: /\.(png|jpe?g|gif|ico|svg|webp)$/,
+					use: [{
+						loader: 'file-loader',
+						options: {
+							name: `images/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
+							publicPath: setPublicPath,
+						}
+					}]
+				},
+				// Fonts
+				{
+					test: /\.(woff2.|ttf|eot|otf)$/,
+					use: [{
+						loader: 'file-loader',
+						options: {
+							name: `fonts/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
+							publicPath: setPublicPath
+						}
+					}]
 				}
 			]
 		},
+		resolve: { extensions: ['.js', '.json', '.jsx'] },
+		stats: false,
+		devtool: isDevMode ? 'inline-source-map' : false,
+		// devtool: isDevMode ? 'inline-cheap-module-source-map' : false,
+		devServer: {
+			contentBase: path.join(__dirname, 'public'),
+			publicPath: setPublicPath,
+			headers: { 'Access-Control-Allow-Origin': '*' },
+			overlay: true,
+			clientLogLevel: 'warning',
+			quiet: true,
+			compress: true,
+			historyApiFallback: true,
+			watchOptions: {
+				ignored: /node_modules/
+			}
+		},
 		plugins: [
-			new HtmlWebpackPlugin({
-				template: './src/index.html',
-				inject: true
+			// Extrait css
+			new MiniCssExtractPlugin({
+				filename: isDevMode ? '[name].css' : '[name].[contenthash:8].css',
+				chunkFilename: isDevMode ? '[id].css' : '[id].[contenthash:8].css',
 			}),
-			new ExtractTextPlugin({
-				filename: '[name].css',
-				disable: isDevelopment
+
+			// Supprimer les entrées inutilisées
+			new DeleteUnused(['css/app']),
+
+			// Manifest
+			new ManifestPlugin({
+				// Par convention, nous supprimons la barre oblique d'ouverture sur les clés manifestes
+				basePath: setPublicPath.replace(/^\//, ''),
+				writeToFileEmit: true
 			}),
-			new ImageminPlugin({
-				disable: isDevelopment,
-				jpegtran: false,
-				plugins: [
-					imageminMozjpeg({
-						quality: 100,
-						progressive: true
-					})
-				]
-			}),
-			new FriendlyErrorsPlugin()
+
+			// Nettoyer
+			new CleanWebpackPlugin(['**/*'], {
+				root: setOutputPath,
+				verbose: false,
+				dry: false
+			})
 		]
 	};
-
-	// Plugins spécifiques Env
-	if (!isDevelopment) {
-		config.plugins.push(new CleanWebpackPlugin(['dist'], {
-			root: path.resolve(__dirname, '/'),
-			verbose: true,
-			dry: false
-		}));
-		config.plugins.push(new ManifestPlugin());
+	/**
+	 * FriendlyErrorsWebpackPlugin
+	 */
+	// Renvoie le chemin de sortie, mais en tant que chaîne relative (par exemple, web/build)
+	const getRelativeOutputPath = config.output.path.replace(config.context + path.sep, '');
+	const FriendlyErrorsPluginOptions = {
+		compilationSuccessInfo: { messages: [] },
+		clearConsole: false,
+		additionalFormatters: [],
+		additionalTransformers: []
+	};
+	const FriendlyErrorPlugin = new FriendlyErrorsWebpackPlugin(FriendlyErrorsPluginOptions);
+	if (isDevMode) {
+		config.plugins.push(FriendlyErrorPlugin);
+	} else {
+		config.plugins.push(FriendlyErrorPlugin, new FriendlyErrors(getRelativeOutputPath, FriendlyErrorPlugin));
 	}
 
 	return config;
