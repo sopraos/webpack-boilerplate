@@ -100,8 +100,9 @@ module.exports = env => {
 								['@babel/preset-env', {
 									targets: {
 										browsers: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'safari >= 7','not dead'],
-										forceAllTransforms: true
+										// forceAllTransforms: true
 									},
+									forceAllTransforms: true,
 									modules: false,
 									useBuiltIns: 'usage'
 								}]
@@ -140,7 +141,7 @@ module.exports = env => {
 						loader: 'file-loader',
 						options: {
 							name: `images/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
-							publicPath: setPublicPath,
+							publicPath: isDevMode ? devServerUrl : setPublicPath // New fix url assets css
 						}
 					}]
 				},
@@ -151,7 +152,7 @@ module.exports = env => {
 						loader: 'file-loader',
 						options: {
 							name: `fonts/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
-							publicPath: setPublicPath
+							publicPath: isDevMode ? devServerUrl : setPublicPath // New fix url assets css
 						}
 					}]
 				}
