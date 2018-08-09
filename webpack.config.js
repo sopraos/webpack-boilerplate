@@ -147,7 +147,7 @@ module.exports = env => {
 				},
 				// Fonts
 				{
-					test: /\.(woff2.|ttf|eot|otf)$/,
+					test: /\.(woff|woff2|ttf|eot|otf)$/,
 					use: [{
 						loader: 'file-loader',
 						options: {
