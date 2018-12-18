@@ -10,6 +10,8 @@ const ManifestPlugin = require('webpack-manifest-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const chalk = require('chalk');
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 /**
  * PLUGINS
@@ -51,7 +53,6 @@ class FriendlyErrors {
 			callback();
 		});
 	}
-
 }
 
 /**
@@ -65,20 +66,20 @@ const setPublicPath = '/build'.replace(/\/$/,'') + '/';
 const devServerUrl = 'http://localhost:8080/'.replace(/\/$/,'') + setPublicPath;
 
 module.exports = env => {
-	const isDevMode = env.development === true;
+	const isProdMode = env.production === true;
 	// Base de configuration
 	const config = {
-		mode: isDevMode ? 'development' : 'production',
+		mode: isProdMode ? 'production' : 'development',
 		context: __dirname,
 		entry: {
-			'js/app': './src/javascripts/app.js',
-			'css/app': './src/stylesheets/app.scss',
+			'js/app': './assets/javascripts/app.js',
+			'css/app': './assets/stylesheets/app.scss',
 		},
 		output: {
-			filename: isDevMode ? '[name].js' : '[name].[chunkhash:8].js',
+			filename: isProdMode ? '[name].[chunkhash:8].js' : '[name].js',
 			path: setOutputPath,
-			pathinfo: isDevMode,
-			publicPath: isDevMode ? devServerUrl : setPublicPath
+			pathinfo: !isProdMode,
+			publicPath: isProdMode ? setPublicPath : devServerUrl
 		},
 		module: {
 			rules: [
@@ -88,50 +89,29 @@ module.exports = env => {
 					test: /\.jsx?$/,
 					exclude: /node_modules/,
 					loader: 'eslint-loader',
-					options: {  cache: true, emitWarning: true, }
+					options: { cache: true, emitWarning: true, }
 				},
 				{
 					test: /\.jsx?$/,
 					exclude: /node_modules/,
 					use: {
 						loader: 'babel-loader',
-						options: {
-							presets: [
-								['@babel/preset-env', {
-									targets: {
-										browsers: ['> 0.5%', 'last 2 versions', 'Firefox ESR', 'safari >= 7','not dead'],
-										// forceAllTransforms: true
-									},
-									forceAllTransforms: true,
-									modules: false,
-									useBuiltIns: 'usage'
-								}]
-							],
-							cacheDirectory: true
-						}
+						options: { cacheDirectory: true }
 					}
 				},
 				// Stylesheets
 				{
 					test: /\.s[ac]ss$/,
 					exclude: /node_modules/,
-					use: [
-						isDevMode ? 'style-loader' : MiniCssExtractPlugin.loader,
+					use: [MiniCssExtractPlugin.loader,
 						{
 							loader: 'css-loader', options: {
-								minimize: !isDevMode,
-								sourceMap: isDevMode,
+								sourceMap: !isProdMode,
 								importLoaders: 1
 							}
-						}, {
-							loader: 'postcss-loader', options: {
-								sourceMap: isDevMode
-							}
-						}, {
-							loader: 'sass-loader', options: {
-								sourceMap: isDevMode,
-							}
-						}
+						},
+						{ loader: 'postcss-loader', options: { sourceMap: !isProdMode } },
+						{ loader: 'sass-loader', options: { sourceMap: !isProdMode } },
 					]
 				},
 				// Images
@@ -140,8 +120,8 @@ module.exports = env => {
 					use: [{
 						loader: 'file-loader',
 						options: {
-							name: `images/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
-							publicPath: isDevMode ? devServerUrl : setPublicPath // New fix url assets css
+							name: `images/[name]${!isProdMode ? '' : '.[hash:8]'}.[ext]`,
+							publicPath: !isProdMode ? devServerUrl : setPublicPath
 						}
 					}]
 				},
@@ -151,17 +131,17 @@ module.exports = env => {
 					use: [{
 						loader: 'file-loader',
 						options: {
-							name: `fonts/[name]${isDevMode ? '' : '.[hash:8]'}.[ext]`,
-							publicPath: isDevMode ? devServerUrl : setPublicPath // New fix url assets css
+							name: `fonts/[name]${!isProdMode ? '' : '.[hash:8]'}.[ext]`,
+							publicPath: !isProdMode ? devServerUrl : setPublicPath
 						}
 					}]
 				}
 			]
 		},
+		optimization: {},
 		resolve: { extensions: ['.js', '.json', '.jsx'] },
 		stats: false,
-		devtool: isDevMode ? 'inline-source-map' : false,
-		// devtool: isDevMode ? 'inline-cheap-module-source-map' : false,
+		devtool: isProdMode ? false : 'inline-cheap-module-source-map',
 		devServer: {
 			contentBase: path.join(__dirname, 'public'),
 			publicPath: setPublicPath,
@@ -178,8 +158,8 @@ module.exports = env => {
 		plugins: [
 			// Extrait css
 			new MiniCssExtractPlugin({
-				filename: isDevMode ? '[name].css' : '[name].[contenthash:8].css',
-				chunkFilename: isDevMode ? '[id].css' : '[id].[contenthash:8].css',
+				filename: isProdMode ? '[name].[contenthash:8].css' : '[name].css',
+				chunkFilename: isProdMode ? '[id].[contenthash:8].css' : '[id].css',
 			}),
 
 			// Supprimer les entrées inutilisées
@@ -199,23 +179,36 @@ module.exports = env => {
 				dry: false
 			})
 		]
-	};
-	/**
-	 * FriendlyErrorsWebpackPlugin
-	 */
-	// Renvoie le chemin de sortie, mais en tant que chaîne relative (par exemple, web/build)
-	const getRelativeOutputPath = config.output.path.replace(config.context + path.sep, '');
-	const FriendlyErrorsPluginOptions = {
-		compilationSuccessInfo: { messages: [] },
-		clearConsole: false,
-		additionalFormatters: [],
-		additionalTransformers: []
-	};
-	const FriendlyErrorPlugin = new FriendlyErrorsWebpackPlugin(FriendlyErrorsPluginOptions);
-	if (isDevMode) {
-		config.plugins.push(FriendlyErrorPlugin);
-	} else {
-		config.plugins.push(FriendlyErrorPlugin, new FriendlyErrors(getRelativeOutputPath, FriendlyErrorPlugin));
+	}; // Fin config
+
+	// FriendlyErrorsWebpackPlugin
+	function friendlyErrorPlugin() {
+		// Renvoie le chemin de sortie, mais en tant que chaîne relative (par exemple, web/build)
+		const getRelativeOutputPath = config.output.path.replace(config.context + path.sep, '');
+		const FriendlyErrorsPluginOptions = {
+			compilationSuccessInfo: { messages: [] },
+			clearConsole: false,
+			additionalFormatters: [],
+			additionalTransformers: []
+		};
+		const FriendlyErrorPlugin = new FriendlyErrorsWebpackPlugin(FriendlyErrorsPluginOptions);
+
+		if (isProdMode) {
+			config.plugins.push(FriendlyErrorPlugin, new FriendlyErrors(getRelativeOutputPath, FriendlyErrorPlugin));
+		} else { config.plugins.push(FriendlyErrorPlugin); }
+	}
+	friendlyErrorPlugin();
+
+	// Optimization config
+	if (isProdMode) {
+		config.optimization = {
+			minimizer: [
+				new TerserPlugin({ sourceMap: false, }),
+				new OptimizeCSSAssetsPlugin({
+					cssProcessorPluginOptions: {map: { inline: false, annotation: true } },
+				})
+			]
+		};
 	}
 
 	return config;

@@ -1,11 +1,11 @@
 {
   "name": "webpack-boilerplate",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Ce dépot me permet de commencer rapidement mes projets",
   "main": "webpack.config.js",
   "scripts": {
     "test": "webpack --env.none",
-    "dev": "webpack-dev-server --env.development --hot --inline",
+    "dev": "webpack-dev-server --env.development",
     "build": "webpack --env.production"
   },
   "repository": {
@@ -13,32 +13,34 @@
     "url": "git+https://github.com/sopraos/webpack-boilerplate.git"
   },
   "author": "Sopraos <contact@ali-t.fr>",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/sopraos/webpack-boilerplate/issues"
   },
   "homepage": "https://github.com/sopraos/webpack-boilerplate#readme",
   "devDependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/preset-env": "^7.1.0",
-    "autoprefixer": "^9.3.1",
+    "@babel/core": "^7.2.0",
+    "@babel/preset-env": "^7.2.0",
+    "autoprefixer": "^9.4.2",
     "babel-eslint": "^10.0.1",
     "babel-loader": "^8.0.4",
     "babel-polyfill": "^6.26.0",
     "chalk": "^2.4.1",
-    "clean-webpack-plugin": "^0.1.19",
-    "css-loader": "^1.0.1",
+    "clean-webpack-plugin": "^1.0.0",
+    "css-loader": "^2.0.1",
     "css-mqpacker": "^7.0.0",
-    "eslint": "^5.8.0",
+    "eslint": "^5.10.0",
     "eslint-loader": "^2.1.1",
     "file-loader": "^2.0.0",
     "friendly-errors-webpack-plugin": "^1.7.0",
-    "mini-css-extract-plugin": "^0.4.4",
+    "mini-css-extract-plugin": "^0.5.0",
     "node-sass": "^4.9.4",
+    "optimize-css-assets-webpack-plugin": "^5.0.1",
     "postcss-loader": "^3.0.0",
     "sass-loader": "^7.1.0",
     "style-loader": "^0.23.1",
-    "webpack": "^4.23.1",
+    "terser-webpack-plugin": "^1.1.0",
+    "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2",
     "webpack-dev-server": "^3.1.10",
     "webpack-manifest-plugin": "^2.0.4"
