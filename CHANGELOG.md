@@ -1,5 +1,8 @@
 # CHANGELOG
 
-## 1.1.0
+## 1.2.0
 
-* Ajout de la méthode `X`
+* Ajout du fichier `.babelrc`
+* Ajout du fichier `.editorconfig`
+
+Changement du nom de fichier src en `assets`
