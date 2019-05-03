@@ -1,6 +1,6 @@
 {
   "name": "webpack-boilerplate",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Ce dépot me permet de commencer rapidement mes projets",
   "main": "webpack.config.js",
   "scripts": {
