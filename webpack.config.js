@@ -72,8 +72,8 @@ module.exports = env => {
 		mode: isProdMode ? 'production' : 'development',
 		context: __dirname,
 		entry: {
-			'js/app': './assets/javascripts/app.js',
-			'css/app': './assets/stylesheets/app.scss',
+			'js/app': './assets/js/app.js',
+			'css/app': './assets/scss/app.scss',
 		},
 		output: {
 			filename: isProdMode ? '[name].[chunkhash:8].js' : '[name].js',
