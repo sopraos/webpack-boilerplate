@@ -6,7 +6,7 @@ module.exports = function(api) {
         modules: false,
         forceAllTransforms: api.env('production'),
         useBuiltIns: 'entry',
-        debug: false
+        corejs: '3.1.3',
       }]
     ]
   };
