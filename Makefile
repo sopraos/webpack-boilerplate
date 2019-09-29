@@ -10,7 +10,7 @@ help:
 ## Configuration du projet
 ##---------------------------------------------------------------------------
 install: ## Installer et démarrer le projet
-install: node_modules
+install: node_modules start
 
 start: ## Démarrer le projet
 start:
