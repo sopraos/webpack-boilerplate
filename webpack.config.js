@@ -58,13 +58,17 @@ class FriendlyErrors {
 /**
  * VARIABLES
  */
-const port = 8080;
+let settings = {
+	port: 8080,
+	useDevServerInHttps: false,
+};
+
 // Le répertoire du projet où les ressources compilées seront stockées
 const setOutputPath = path.resolve(__dirname, 'public/build/');
 // Le chemin public utilisé par le serveur web pour accéder au répertoire précédent
 const setPublicPath = '/build'.replace(/\/$/,'') + '/';
 // Serveur d'URL
-const devServerUrl = `http://localhost:${port}/`.replace(/\/$/,'') + setPublicPath;
+const devServerUrl = `${!settings.useDevServerInHttps ? 'http' : 'https'}://localhost:${settings.port}/`.replace(/\/$/,'') + setPublicPath;
 
 module.exports = env => {
 	const isProdMode = env.production === true;
@@ -144,7 +148,7 @@ module.exports = env => {
 		stats: false,
 		devtool: isProdMode ? false : 'inline-cheap-module-source-map',
 		devServer: {
-			port: port,
+			port: settings.port,
 			contentBase: path.join(__dirname, 'public'),
 			publicPath: setPublicPath,
 			headers: { 'Access-Control-Allow-Origin': '*' },
@@ -155,7 +159,8 @@ module.exports = env => {
 			historyApiFallback: true,
 			watchOptions: {
 				ignored: /node_modules/
-			}
+			},
+			https: settings.useDevServerInHttps
 		},
 		plugins: [
 			// Extrait css
