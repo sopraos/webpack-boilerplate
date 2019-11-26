@@ -8,7 +8,8 @@ module.exports = function(api) {
         useBuiltIns: 'entry',
         corejs: '3.1.3',
       }]
-    ]
+		],
+		sourceType: 'unambiguous'
   };
 };
 
