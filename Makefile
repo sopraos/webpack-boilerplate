@@ -1,4 +1,4 @@
-NPM					= npm
+NPM				= npm
 
 .DEFAULT_GOAL := help
 .PHONY: help
@@ -9,25 +9,30 @@ help:
 ##
 ## Configuration du projet
 ##---------------------------------------------------------------------------
-install: ## Installer et démarrer le projet
-install: node_modules start
+install: node_modules start ## Installer et démarrer le projet
 
-start: ## Démarrer le projet
-start:
+start: assets	## Démarrer le projet
+
+.PHONY: install start
+
+##
+## Assets
+##---------------------------------------------------------------------------
+assets: node_modules	## Construire la version de développement des assets
 	$(NPM) run dev
 
-build: ## Construire le projet
+assets-prod: node_modules	## Construire la version de production des assets
 	$(NPM) run build
 
-.PHONY: install start build
+.PHONY: assets assets-prod
 
 ##
 ## Dépendances
 ##---------------------------------------------------------------------------
-
+# Règles de fichiers
 node_modules: package.lock
 	$(NPM) install
-	@touch -c node_modules
 
 package.lock: package.json
-	$(NPM) upgrade
+	@echo pakage.lock n\'est pas à jour.
+
