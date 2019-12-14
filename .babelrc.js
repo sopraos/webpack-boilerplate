@@ -6,10 +6,9 @@ module.exports = function(api) {
         modules: false,
         forceAllTransforms: api.env('production'),
         useBuiltIns: 'entry',
-        corejs: '3.1.3',
+        corejs: '3',
       }]
 		],
 		sourceType: 'unambiguous'
   };
 };
-

@@ -7,7 +7,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const chalk = require('chalk');
 const FriendlyErrorsWebpackPlugin = require('friendly-errors-webpack-plugin');
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
@@ -17,12 +17,12 @@ const TerserPlugin = require('terser-webpack-plugin');
  * PLUGINS
  */
 // Plugin Supprimer inutilisé | Supprimer les entrées inutilisées
-class DeleteUnused {
+class deleteUnusedEntriesJsPlugin {
 	constructor(entriesToDelete = []) {
 		this.entriesToDelete = entriesToDelete;
 	}
 	apply(compiler) {
-		compiler.hooks.emit.tapAsync('DeleteUnused', (compilation, callback) => {
+		compiler.hooks.emit.tapAsync('deleteUnusedEntriesJsPlugin', (compilation, callback) => {
 			compilation.chunks.forEach((chunk) => {
 				if (this.entriesToDelete.includes(chunk.name)) {
 					let fileDeleteCount = 0; // eslint-disable-line
@@ -39,14 +39,15 @@ class DeleteUnused {
 		});
 	}
 }
+
 // Plugin Friendly Errors Webpack Plugin
-class FriendlyErrors {
+class assetOutputDisplayPlugin {
 	constructor(outputPath, friendlyErrorsPlugin) {
 		this.outputPath = outputPath;
 		this.friendlyErrorsPlugin = friendlyErrorsPlugin;
 	}
 	apply(compiler) {
-		compiler.hooks.emit.tapAsync('FriendlyErrors', (compilation, callback) => {
+		compiler.hooks.emit.tapAsync('assetOutputDisplayPlugin', (compilation, callback) => {
 			this.friendlyErrorsPlugin.compilationSuccessInfo.messages = [
 				`${chalk.yellow(Object.keys(compilation.assets).length)} fichiers écrits dans ${chalk.yellow(this.outputPath)}`
 			];
@@ -61,6 +62,11 @@ class FriendlyErrors {
 let settings = {
 	port: 8080,
 	useDevServerInHttps: false,
+	entry: {
+		'js/app': './assets/js/app.js',
+		'css/app': './assets/scss/app.scss'
+	},
+	deleteUnusedEntries: ['css/app'],
 };
 
 // Le répertoire du projet où les ressources compilées seront stockées
@@ -72,24 +78,28 @@ const devServerUrl = `${!settings.useDevServerInHttps ? 'http' : 'https'}://loca
 
 module.exports = env => {
 	const isProdMode = env.production === true;
+	const cssLoaders = [
+		{ loader: 'css-loader', options: { sourceMap: !isProdMode, importLoaders: 1 } },
+		{ loader: 'postcss-loader', options: { ident: 'postcss', sourceMap: !isProdMode } },
+	];
+
+	console.log('Running webpack ...');
+	console.log();
+
 	// Base de configuration
 	const config = {
 		mode: isProdMode ? 'production' : 'development',
 		context: __dirname,
-		entry: {
-			'js/app': './assets/js/app.js',
-			'css/app': './assets/scss/app.scss',
-		},
+		entry: settings.entry,
 		output: {
-			filename: isProdMode ? '[name].[chunkhash:8].js' : '[name].js',
+			filename: isProdMode ? '[name].[contenthash].js' : '[name].js',
 			path: setOutputPath,
 			pathinfo: !isProdMode,
 			publicPath: isProdMode ? setPublicPath : devServerUrl
 		},
 		module: {
 			rules: [
-				// Javascripts
-				{
+				{// Js
 					enforce: 'pre',
 					test: /\.jsx?$/,
 					exclude: /node_modules/,
@@ -98,45 +108,34 @@ module.exports = env => {
 				},
 				{
 					test: /\.jsx?$/,
-					exclude: /node_modules/,
-					use: {
-						loader: 'babel-loader',
-						options: { cacheDirectory: true }
-					}
+					exclude: /(node_modules|bower_components)/,
+					loader: 'babel-loader',
+					options: { cacheDirectory: true }
 				},
-				// Stylesheets
-				{
-					test: /\.s[ac]ss$/,
-					exclude: /node_modules/,
+				{// STYLE
+					test: /\.s[ac]ss$/i,
 					use: [MiniCssExtractPlugin.loader,
-						{
-							loader: 'css-loader', options: {
-								sourceMap: !isProdMode,
-								importLoaders: 1
-							}
-						},
-						{ loader: 'postcss-loader', options: { sourceMap: !isProdMode } },
+						...cssLoaders,
 						{ loader: 'sass-loader', options: { sourceMap: !isProdMode } },
 					]
 				},
-				// Images
-				{
-					test: /\.(png|jpe?g|gif|ico|svg|webp)$/,
+				{// Images
+					test: /\.(png|jpe?g|gif|ico|svg|webp)$/i,
 					use: [{
 						loader: 'file-loader',
 						options: {
-							name: `images/[name]${!isProdMode ? '' : '.[hash:8]'}.[ext]`,
+							name: `images/[name]${!isProdMode ? '' : '.[contenthash]'}.[ext]`,
 							publicPath: !isProdMode ? devServerUrl : setPublicPath
 						}
 					}]
 				},
 				// Fonts
 				{
-					test: /\.(woff|woff2|ttf|eot|otf)$/,
+					test: /\.(woff|woff2|ttf|eot|otf)$/i,
 					use: [{
 						loader: 'file-loader',
 						options: {
-							name: `fonts/[name]${!isProdMode ? '' : '.[hash:8]'}.[ext]`,
+							name: `fonts/[name]${!isProdMode ? '' : '.[contenthash]'}.[ext]`,
 							publicPath: !isProdMode ? devServerUrl : setPublicPath
 						}
 					}]
@@ -165,52 +164,62 @@ module.exports = env => {
 		plugins: [
 			// Extrait css
 			new MiniCssExtractPlugin({
-				filename: isProdMode ? '[name].[contenthash:8].css' : '[name].css',
-				chunkFilename: isProdMode ? '[id].[contenthash:8].css' : '[id].css',
+				filename: isProdMode ? '[name].[contenthash].css' : '[name].css',
+				chunkFilename: isProdMode ? '[id].[contenthash].css' : '[id].css',
+				ignoreOrder: false,
 			}),
 
 			// Supprimer les entrées inutilisées
-			new DeleteUnused(['css/app']),
+			new deleteUnusedEntriesJsPlugin(settings.deleteUnusedEntries),
 
 			// Manifest
 			new ManifestPlugin({
 				// Par convention, nous supprimons la barre oblique d'ouverture sur les clés manifestes
+				seed: {},
 				basePath: setPublicPath.replace(/^\//, ''),
 				writeToFileEmit: true
 			}),
 
 			// Nettoyer
-			new CleanWebpackPlugin(['**/*'], {
+			new CleanWebpackPlugin({
 				root: setOutputPath,
 				verbose: false,
-				dry: false
+				dry: false,
+				cleanOnceBeforeBuildPatterns: ['**/*'],
 			})
 		]
-	}; // Fin config
+	};
 
 	// FriendlyErrorsWebpackPlugin
-	function friendlyErrorPlugin() {
-		// Renvoie le chemin de sortie, mais en tant que chaîne relative (par exemple, web/build)
-		const getRelativeOutputPath = config.output.path.replace(config.context + path.sep, '');
-		const FriendlyErrorsPluginOptions = {
-			compilationSuccessInfo: { messages: [] },
+	function friendlyErrorPluginUtil() {
+		const friendlyErrorsPluginOptions = {
 			clearConsole: false,
+			additionalTransformers: [],
 			additionalFormatters: [],
-			additionalTransformers: []
+			compilationSuccessInfo: { messages: [] }
 		};
-		const FriendlyErrorPlugin = new FriendlyErrorsWebpackPlugin(FriendlyErrorsPluginOptions);
 
-		if (isProdMode) {
-			config.plugins.push(FriendlyErrorPlugin, new FriendlyErrors(getRelativeOutputPath, FriendlyErrorPlugin));
-		} else { config.plugins.push(FriendlyErrorPlugin); }
+		return new FriendlyErrorsWebpackPlugin(friendlyErrorsPluginOptions);
 	}
-	friendlyErrorPlugin();
+	const friendlyErrorPlugin = friendlyErrorPluginUtil();
+	// Renvoie le chemin de sortie, mais en tant que chaîne relative (par exemple, web/build)
+	const getRelativeOutputPath = config.output.path.replace(config.context + path.sep, '');
+
+	if (isProdMode) {
+		config.plugins.push(friendlyErrorPlugin, new assetOutputDisplayPlugin(getRelativeOutputPath, friendlyErrorPlugin));
+	} else {
+		config.plugins.push(friendlyErrorPlugin);
+	}
 
 	// Optimization config
 	if (isProdMode) {
 		config.optimization = {
 			minimizer: [
-				new TerserPlugin({ sourceMap: false, }),
+				new TerserPlugin({
+					sourceMap: false,
+					cache: true,
+					parallel: true,
+				}),
 				new OptimizeCSSAssetsPlugin({
 					cssProcessorPluginOptions: {map: { inline: false, annotation: true } },
 				})
