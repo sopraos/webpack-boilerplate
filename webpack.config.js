@@ -62,6 +62,7 @@ class assetOutputDisplayPlugin {
 let settings = {
 	port: 8080,
 	useDevServerInHttps: false,
+	allowedHosts: [], //.localhost
 	entry: {
 		'js/app': './assets/js/app.js',
 		'css/app': './assets/scss/app.scss'
@@ -112,6 +113,22 @@ module.exports = env => {
 					loader: 'babel-loader',
 					options: { cacheDirectory: true }
 				},
+				{// STYLE CSS
+					test: /\.css$/i,
+					oneOf: [
+						{
+							resourceQuery: /module/,
+							use: [MiniCssExtractPlugin.loader,
+								...cssLoaders,
+							]
+						},
+						{
+							use: [MiniCssExtractPlugin.loader,
+								...cssLoaders,
+							]
+						}
+					]
+				},
 				{// STYLE
 					test: /\.s[ac]ss$/i,
 					use: [MiniCssExtractPlugin.loader,
@@ -159,7 +176,8 @@ module.exports = env => {
 			watchOptions: {
 				ignored: /node_modules/
 			},
-			https: settings.useDevServerInHttps
+			https: settings.useDevServerInHttps,
+			allowedHosts: settings.allowedHosts,
 		},
 		plugins: [
 			// Extrait css
