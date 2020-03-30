@@ -7,7 +7,7 @@
     "none": "webpack --env.production --progress",
     "dev": "webpack-dev-server --env.development",
     "build": "webpack --env.production --progress"
-	},
+  },
   "browserslist": [
     "last 4 versions"
   ],
@@ -38,7 +38,7 @@
     "file-loader": "^5.0.2",
     "friendly-errors-webpack-plugin": "^1.7.0",
     "mini-css-extract-plugin": "^0.8.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "postcss-loader": "^3.0.0",
     "sass-loader": "^8.0.0",
