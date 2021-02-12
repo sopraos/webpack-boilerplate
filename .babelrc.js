@@ -5,7 +5,7 @@ module.exports = function(api) {
         targets: {},
         modules: false,
         forceAllTransforms: api.env('production'),
-        useBuiltIns: 'entry',
+        useBuiltIns: 'usage',
         corejs: '3',
       }]
 		],
