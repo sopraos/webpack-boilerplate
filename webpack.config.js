@@ -184,6 +184,7 @@ module.exports = env => {
 		stats: false,
 		devtool: isProdMode ? false : 'inline-cheap-module-source-map',
 		// target: 'last 4 versions',
+		target: isProdMode ? 'browserslist' : 'web',
 		devServer: {
 			port: settings.port,
 			contentBase: path.join(__dirname, 'public'),
