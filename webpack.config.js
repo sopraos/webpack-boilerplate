@@ -13,7 +13,6 @@ const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 // PLUGINS PERSONNALISER
-
 // Plugin Supprimer inutilisé | Supprimer les entrées inutilisées
 class deleteUnusedEntriesJsPlugin {
 	constructor(entriesToDelete = []) {
@@ -25,34 +24,34 @@ class deleteUnusedEntriesJsPlugin {
 				if (this.entriesToDelete.includes(chunk.name)) {
 					const removedFiles = [];
 
-				  // Recherchez d'abord les fichiers principaux à supprimer
-				  for (const filename of Array.from(chunk.files)) {
-				    if (/\.js?(\?[^.]*)?$/.test(filename)) {
-				      removedFiles.push(filename);
-				      // Supprimer le fichier de sortie
-				      compilation.deleteAsset(filename);
-				      // Supprimer le fichier afin qu'il ne soit pas vidé dans le manifeste
-				      chunk.files.delete(filename);
-				    }
-				  }
+					// Recherchez d'abord les fichiers principaux à supprimer
+					for (const filename of Array.from(chunk.files)) {
+						if (/\.js?(\?[^.]*)?$/.test(filename)) {
+							removedFiles.push(filename);
+							// Supprimer le fichier de sortie
+							compilation.deleteAsset(filename);
+							// Supprimer le fichier afin qu'il ne soit pas vidé dans le manifeste
+							chunk.files.delete(filename);
+						}
+					}
 
-				  // Puis recherchez également dans les fichiers auxiliaires les cartes source
-				  for (const filename of Array.from(chunk.auxiliaryFiles)) {
-				    if (removedFiles.map(name => `${name}.map`).includes(`${filename}`)) {
-				      removedFiles.push(filename);
-				      // Supprimer le fichier de sortie
-				      compilation.deleteAsset(filename);
-				      // Supprimer le fichier afin qu'il ne soit pas vidé dans le manifeste
-				      chunk.auxiliaryFiles.delete(filename);
-				    }
-				  }
+					// Puis recherchez également dans les fichiers auxiliaires les cartes source
+					for (const filename of Array.from(chunk.auxiliaryFiles)) {
+						if (removedFiles.map(name => `${name}.map`).includes(`${filename}`)) {
+							removedFiles.push(filename);
+							// Supprimer le fichier de sortie
+							compilation.deleteAsset(filename);
+							// Supprimer le fichier afin qu'il ne soit pas vidé dans le manifeste
+							chunk.auxiliaryFiles.delete(filename);
+						}
+					}
 
 					// vérification de l'intégrité: assurez-vous que 1 ou 2 fichiers ont été supprimés
 					// s'il y a un cas limite où plus de fichiers .js
 					// ou 0 fichiers .js pourraient être supprimés, je préfère une erreur
-				  if (removedFiles.length === 0 || removedFiles.length > 2) {
-				    throw new Error(`Problem deleting JS entry for ${chunk.name}: ${removedFiles.length} files were deleted (${removedFiles.join(', ')})`);
-				  }
+					if (removedFiles.length === 0 || removedFiles.length > 2) {
+						throw new Error(`Problem deleting JS entry for ${chunk.name}: ${removedFiles.length} files were deleted (${removedFiles.join(', ')})`);
+					}
 				}
 			});
 		};
@@ -69,22 +68,21 @@ class deleteUnusedEntriesJsPlugin {
 //Plugin Friendly Errors Webpack Plugin
 class assetOutputDisplayPlugin {
 	constructor(outputPath, friendlyErrorsPlugin) {
-    this.outputPath = outputPath;
-    this.friendlyErrorsPlugin = friendlyErrorsPlugin;
+		this.outputPath = outputPath;
+		this.friendlyErrorsPlugin = friendlyErrorsPlugin;
 	}
-  apply(compiler) {
+	apply(compiler) {
 		// Réinitialisation complète des messages pour éviter d’ajouter de plus en plus de messages lors de l’utilisation de la "watch".
-    compiler.hooks.emit.tapAsync('AssetOutputDisplayPlugin', (compilation, callback) => {
+		compiler.hooks.emit.tapAsync('AssetOutputDisplayPlugin', (compilation, callback) => {
 			this.friendlyErrorsPlugin.compilationSuccessInfo.messages = [
 				`${chalk.yellow(Object.keys(compilation.assets).length)} fichiers écrits dans  ${chalk.yellow(this.outputPath)}`
 			];
 			callback();
-    });
-  }
+		});
+	}
 }
 
 // Variables
-const log = console.log;
 let settings = {
 	port: 8080,
 	useDevServerInHttps: false,
@@ -110,10 +108,10 @@ module.exports = env => {
 		{ loader: 'postcss-loader', options: { sourceMap: !isProdMode } },
 	];
 
-	log(chalk.hex('#DEADED').bold('Running webpack...'));
-	log();
+	console.log(chalk.hex('#DEADED').bold('Running webpack...'));
+	console.log();
 
-		// Base de configuration
+	// Base de configuration
 	const config = {
 		mode: isProdMode ? 'production' : 'development',
 		context: __dirname,
@@ -122,7 +120,7 @@ module.exports = env => {
 			filename: isProdMode ? '[name].[contenthash].js' : '[name].js',
 			path: setOutputPath,
 			pathinfo: !isProdMode,
-			publicPath: setPublicPath
+			publicPath: isProdMode ? setPublicPath : devServerUrl
 		},
 		module: {
 			rules: [
@@ -192,7 +190,7 @@ module.exports = env => {
 			headers: { 'Access-Control-Allow-Origin': '*' },
 			hot: isProdMode ? false : true,
 			overlay: {
-				warnings: true,
+				warnings: false,
 				errors: true,
 			},
 			clientLogLevel: 'silent',
@@ -220,9 +218,9 @@ module.exports = env => {
 			}),
 			// Nettoyer
 			new CleanWebpackPlugin({
-				root: setOutputPath,
+				verbose: false,
 				dry: false,
-				cleanOnceBeforeBuildPatterns: ['**/*'],
+				cleanOnceBeforeBuildPatterns: ['**/*', '!manifest.json'],
 			})
 		]
 	};
@@ -263,4 +261,4 @@ module.exports = env => {
 
 	// RETURN CONFIG
 	return config;
-}
+};
