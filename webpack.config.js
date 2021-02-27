@@ -86,10 +86,10 @@ class assetOutputDisplayPlugin {
 let settings = {
 	port: 8080,
 	useDevServerInHttps: false,
+	isHot: true,
 	allowedHosts: [], //.localhost
 	entry: {
-		'js/app': './assets/js/app.js',
-		'css/app': './assets/scss/app.scss'
+		'app': './assets/js/app.js',
 	},
 	deleteUnusedEntries: ['css/app'],
 };
@@ -188,7 +188,7 @@ module.exports = env => {
 			contentBase: path.join(__dirname, 'public'),
 			publicPath: setPublicPath,
 			headers: { 'Access-Control-Allow-Origin': '*' },
-			hot: isProdMode ? false : true,
+			hot: settings.isHot,
 			overlay: {
 				warnings: false,
 				errors: true,

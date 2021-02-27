@@ -1,3 +1,4 @@
+import '../scss/app.scss';
 import hello from './hello';
 
 document.getElementById('hello').innerHTML = hello;
