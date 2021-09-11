@@ -87,7 +87,8 @@ let settings = {
 	port: 8080,
 	useDevServerInHttps: false,
 	isHot: true,
-	allowedHosts: [], //.localhost
+	liveReload: false,
+	allowedHosts: ['.localhost'], //.localhost
 	entry: {
 		'app': './assets/js/app.js',
 	},
@@ -185,19 +186,23 @@ module.exports = env => {
 		target: isProdMode ? 'browserslist' : 'web',
 		devServer: {
 			port: settings.port,
-			contentBase: path.join(__dirname, 'public'),
-			publicPath: setPublicPath,
-			headers: { 'Access-Control-Allow-Origin': '*' },
-			hot: settings.isHot,
-			overlay: {
-				warnings: false,
-				errors: true,
+			static: {
+				directory: path.join(__dirname, 'public'),
+				// publicPath: setPublicPath,
 			},
-			clientLogLevel: 'silent',
-			quiet: true,
+			client: {
+				progress: false,
+				overlay: {
+					errors: true,
+					warnings: false,
+				},
+			},
 			compress: true,
-			historyApiFallback: true,
 			https: settings.useDevServerInHttps,
+			hot: settings.isHot,
+			liveReload: settings.liveReload,
+			historyApiFallback: true,
+			headers: { 'Access-Control-Allow-Origin': '*' },
 			allowedHosts: settings.allowedHosts,
 		},
 		plugins: [
